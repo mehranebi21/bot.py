@@ -1,41 +1,46 @@
-import os
-from playwright.sync_api import sync_playwright
 import time
 import random
+from playwright.sync_api import sync_playwright
+from playwright_stealth import stealth_sync
 
-# تنظیمات API
 API_KEY = "feb2c1e8-ec74-4fe2-ad35-fc7fc67a74ea"
-PROXY_URL = f"http://scrapeops:{API_KEY}@residential-proxy.scrapeops.io:8181"
 
-def visit_link():
+def visit_link_multi():
     with sync_playwright() as p:
-        # لانچ مرورگر در حالت بدون گرافیک (Headless)
         browser = p.chromium.launch(headless=True)
         
-        # تنظیم کانتکست با پروکسی و User-Agent انسانی
-        context = browser.new_context(
-            proxy={"server": PROXY_URL},
-            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
-        )
-        
-        page = context.new_page()
-        
-        try:
-            print("در حال شروع بازدید...")
-            # لینک هدف را اینجا جایگزین کنید
-            page.goto("لینک_کوتاه_شده_خود_را_اینجا_بنویسید", wait_until="networkidle")
+        # تعداد بازدیدهایی که می‌خواهیم در یک اجرا انجام دهیم
+        for i in range(5): 
+            # تولید یک ID تصادفی برای نشست (این باعث می‌شود پروکسی آی‌پی را تغییر دهد)
+            session_id = f"session_{random.randint(1000, 9999)}"
+            proxy_url = f"http://scrapeops-session={session_id}:{API_KEY}@residential-proxy.scrapeops.io:8181"
             
-            # شبیه‌سازی خواندن صفحه
-            time.sleep(random.uniform(5, 12)) 
-            page.mouse.wheel(0, 800)
-            time.sleep(random.uniform(3, 6))
+            context = browser.new_context(proxy={"server": proxy_url})
+            context.on("page", lambda new_page: new_page.close())
+            page = context.new_page()
+            stealth_sync(page)
             
-            print("بازدید با موفقیت انجام شد.")
-            
-        except Exception as e:
-            print(f"خطا در حین بازدید: {e}")
-        finally:
-            browser.close()
+            try:
+                print(f"شروع بازدید شماره {i+1} با آی‌پی جدید...")
+                page.goto("https://shrinkme.click/Salami221", wait_until="domcontentloaded")
+                
+                # فرآیند کلیک‌های چندمرحله‌ای
+                for _ in range(6):
+                    time.sleep(5)
+                    # پیدا کردن دکمه‌های احتمالی
+                    for btn in ["Continue", "Next", "Get Link", "Verify"]:
+                        if page.query_selector(f"text={btn}"):
+                            page.click(f"text={btn}")
+                            break
+                            
+                print(f"بازدید شماره {i+1} با موفقیت ثبت شد.")
+            except Exception as e:
+                print(f"خطا در بازدید {i+1}: {e}")
+            finally:
+                context.close()
+                time.sleep(random.randint(10, 20)) # وقفه بین بازدیدها
+                
+        browser.close()
 
 if __name__ == "__main__":
-    visit_link()
+    visit_link_multi()
