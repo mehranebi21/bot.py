@@ -1,0 +1,26 @@
+name: Run Bot
+
+on:
+  schedule:
+    - cron: '0 * * * *' # اجرای خودکار در ابتدای هر ساعت
+  workflow_dispatch: # دکمه برای اجرای دستی در گیت‌هاب
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install playwright
+          playwright install chromium
+
+      - name: Run bot script
+        run: python bot.py
