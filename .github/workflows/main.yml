@@ -2,8 +2,8 @@ name: Run Bot
 
 on:
   schedule:
-    - cron: '0 * * * *' # اجرای خودکار در هر ساعت
-  workflow_dispatch: # اجازه اجرای دستی در گیت‌هاب
+    - cron: '0 * * * *' # اجرای هر ساعت یکبار
+  workflow_dispatch:
 
 jobs:
   build:
@@ -19,8 +19,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          # نصب کتابخانه‌های لازم برای مرورگر و دور زدن ربات
-          pip install playwright playwright-stealth
+          pip install playwright
           playwright install chromium
 
       - name: Run bot script
