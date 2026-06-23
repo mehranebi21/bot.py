@@ -4,43 +4,44 @@ from playwright.sync_api import sync_playwright
 
 API_KEY = "feb2c1e8-ec74-4fe2-ad35-fc7fc67a74ea"
 
-def visit_link_multi():
+def visit_link():
     with sync_playwright() as p:
-        # لانچ کردن مرورگر فقط یک بار
+        # لانچ با تنظیمات اختصاصی برای مخفی کردن محیطِ خودکار
         browser = p.chromium.launch(headless=True)
+        session_id = f"session_{random.randint(100000, 999999)}"
+        proxy_url = f"http://scrapeops-session={session_id}:{API_KEY}@residential-proxy.scrapeops.io:8181"
         
-        for i in range(3): 
-            try:
-                # ایجاد یک نشست کاملاً جدید برای هر بازدید
-                session_id = f"session_{random.randint(100000, 999999)}"
-                proxy_url = f"http://scrapeops-session={session_id}:{API_KEY}@residential-proxy.scrapeops.io:8181"
-                
-                context = browser.new_context(proxy={"server": proxy_url})
-                page = context.new_page()
-                
-                # جلوگیری از بسته شدن پاپ‌آپ‌ها به صورت تهاجمی
-                context.on("page", lambda p: p.close())
-                
-                print(f"شروع بازدید شماره {i+1} با نشست {session_id}...")
-                
-                # استفاده از wait_until="commit" به جای domcontentloaded برای جلوگیری از مسدود شدن سریع
-                page.goto("https://shrinkme.click/Salami221", wait_until="commit")
-                
-                # صبر برای لود شدن لایه‌های امنیتی
-                time.sleep(15)
-                
-                # چک کردن اینکه آیا صفحه اصلاً باز شده یا نه
-                if page.title():
-                    print("صفحه با موفقیت لود شد.")
-                    # در اینجا می‌توانید کلیک‌ها را اضافه کنید
-                
-            except Exception as e:
-                print(f"خطا در بازدید {i+1}: {e}")
-            finally:
-                context.close()
-                time.sleep(random.randint(10, 20))
-                
-        browser.close()
+        # تنظیم کانتکست با ویژگی‌های یک کاربر واقعی (ویندوز ۱۰ + کروم)
+        context = browser.new_context(
+            proxy={"server": proxy_url},
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+            viewport={'width': 1366, 'height': 768},
+            locale='en-US'
+        )
+        
+        page = context.new_page()
+        
+        # مخفی کردن ردپایِ ربات در جاوا اسکریپت
+        page.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+        
+        try:
+            print("در حال بازدید از شبکه تبلیغاتی...")
+            # ورود به صفحه
+            page.goto("https://www.effectivecpmnetwork.com/k5zpka3k?key=53cbfbb56f98ad1b8c6b83d88f0e0f8a")
+            
+            # صبر کردن برای لود کامل (تبلیغات شبکه نیاز به زمان دارند)
+            time.sleep(random.randint(15, 25))
+            
+            # اسکرول ملایم برای اینکه سرور فکر کند کاربر در حال مطالعه صفحه است
+            page.mouse.wheel(0, 300)
+            time.sleep(5)
+            
+            print("بازدید با رفتار انسانی شبیه‌سازی شد.")
+            
+        except Exception as e:
+            print(f"خطا: {e}")
+        finally:
+            browser.close()
 
 if __name__ == "__main__":
-    visit_link_multi()
+    visit_link()
